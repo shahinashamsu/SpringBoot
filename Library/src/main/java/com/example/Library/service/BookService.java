@@ -20,27 +20,19 @@ public class BookService {
         return bookRepository.findAll();
     }
 
-    public String borrowBook(Book bookModel) {
-        Book bookToBorrow = bookRepository.findById(bookModel.getId()).orElse(null);
-
-        if (bookToBorrow == null) {
-            return "Book with ID " + bookModel.getId() + " not found.";
+    public boolean borrowBook(Integer bookId, String borrowerName) {
+        Book book = bookRepository.findById(bookId).orElse(null);
+        if (book != null && !book.isBorrowed()) {
+            book.setBorrowed(true);
+            book.setBorrowedBy(borrowerName);
+            bookRepository.save(book);
+            return true;
         }
-
-        if (bookToBorrow.isBorrowed()) {
-            return "Book is already borrowed.";
-        }
-
-        bookToBorrow.setBorrowed(true);
-        bookToBorrow.setBorrowedBy(bookModel.getBorrowedBy());
-        bookRepository.save(bookToBorrow);
-
-        return "Book borrowed successfully.";
+        return false;
     }
 
-    public List<Book> getAvailableBooks() {
-
-       // System.out.println(bookRepository.findByBorrowed(false));
-        return bookRepository.findByBorrowed(false);
+    public void deleteBook(Integer bookId) {
+        bookRepository.deleteById(bookId);
     }
+
 }

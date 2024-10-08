@@ -28,7 +28,7 @@
     <h2>${message}</h2>
 
     <!-- Link to navigate back to the index page -->
-    <a href="/" class="link">Back to Home</a>
+    <a href="/index" class="link">Back to Home</a>
 </body>
 </html>
 

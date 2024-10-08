@@ -3,24 +3,39 @@ package com.example.Library.controller;
 import com.example.Library.model.Users;
 import com.example.Library.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.servlet.ModelAndView;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-@RestController
+@Controller
 public class UserController {
 
     @Autowired
     private UserService userService;
 
-    @PostMapping("/register")
-    public Users register(@RequestBody Users user){
-        return userService.register(user);
+
+    @GetMapping("/login")
+    public String showLoginPage() {
+        return "login";
     }
+
 
     @PostMapping("/login")
-    public String login(@RequestBody Users user){
-        return userService.verify(user);
-
+    public String login(Users user, RedirectAttributes redirectAttributes) {
+        boolean isValidUser = userService.verify(user);
+        if (isValidUser) {
+            redirectAttributes.addFlashAttribute("username", user.getUsername()); // Use flash attribute for redirect
+            return "redirect:/index";
+        } else {
+            redirectAttributes.addFlashAttribute("error", "Invalid username or password!"); // Set error message
+            return "redirect:/login";
+        }
     }
+
 }

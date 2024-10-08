@@ -19,20 +19,28 @@ public class UserService {
     private JWTService jwtService;
 
     @Autowired
-    AuthenticationManager authManager;
+    private AuthenticationManager authManager;
 
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder(12);
-    public Users register(Users user){
+
+
+    public Users register(Users user) {
         user.setPassword(encoder.encode(user.getPassword()));
-       return userRepository.save(user);
+        return userRepository.save(user);
     }
 
-    public String verify(Users user){
-        Authentication authentication = authManager.authenticate(new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
 
-        if(authentication.isAuthenticated())
-            return jwtService.generateToken(user.getUsername());
-
-        return "fail";
+    public boolean verify(Users user) {
+        try {
+            Authentication authentication = authManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword()));
+            if (authentication.isAuthenticated()) {
+                String token = jwtService.generateToken(user.getUsername());
+                return true;
+            }
+        } catch (Exception e) {
+            System.err.println("Authentication failed: " + e.getMessage());
+        }
+        return false;
     }
 }
