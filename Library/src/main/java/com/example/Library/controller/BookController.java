@@ -1,5 +1,6 @@
 package com.example.Library.controller;
 
+import com.example.Library.exception.BookAlreadyExistsException;
 import com.example.Library.model.Book;
 import com.example.Library.service.BookService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +19,13 @@ public class BookController {
     // Add a new book to the library
     @PostMapping("/books")
     public ModelAndView addBook(@ModelAttribute Book bookData) {
-        service.addBook(bookData);
         ModelAndView mv = new ModelAndView("success");
-        mv.addObject("message", "Book added successfully");
+        try {
+            service.addBook(bookData);
+            mv.addObject("message", "Book added successfully");
+        } catch (BookAlreadyExistsException e) {
+            mv.addObject("message", e.getMessage());
+        }
         return mv;
     }
 }

@@ -2,6 +2,7 @@ package com.example.Library.controller;
 
 import com.example.Library.model.Users;
 import com.example.Library.service.UserService;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,15 +28,17 @@ public class UserController {
 
 
     @PostMapping("/login")
-    public String login(Users user, RedirectAttributes redirectAttributes) {
+    public String login(Users user, RedirectAttributes redirectAttributes, HttpSession session) {
         boolean isValidUser = userService.verify(user);
         if (isValidUser) {
-            redirectAttributes.addFlashAttribute("username", user.getUsername()); // Use flash attribute for redirect
+            session.setAttribute("username", user.getUsername()); // Store username in session
+            redirectAttributes.addFlashAttribute("username", user.getUsername()); // Optional flash attribute for immediate feedback
             return "redirect:/index";
         } else {
             redirectAttributes.addFlashAttribute("error", "Invalid username or password!"); // Set error message
             return "redirect:/login";
         }
     }
+
 
 }
