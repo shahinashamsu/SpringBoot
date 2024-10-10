@@ -1,7 +1,9 @@
 package com.example.Library.controller;
 
 import com.example.Library.model.Book;
+import com.example.Library.model.Category;
 import com.example.Library.service.BookService;
+import com.example.Library.service.CategoryService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -11,13 +13,20 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.util.List;
+
 @Controller
+@RequestMapping("/")
 public class PageController {
 
     @Autowired
     private BookService bookService;
+
+    @Autowired
+    private CategoryService categoryService;
 
     @GetMapping("/")
     public String login() {
@@ -27,6 +36,7 @@ public class PageController {
     @GetMapping("/index")
     public String index(
             @RequestParam(value = "search", required = false) String search,
+            @RequestParam(value = "categoryId", required = false) Integer categoryId, // Use categoryId for clarity
             @RequestParam(value = "pageNo", defaultValue = "0") Integer pageNo,
             @RequestParam(value = "pageSize", defaultValue = "8") Integer pageSize,
             Model model, HttpSession session) {
@@ -35,42 +45,34 @@ public class PageController {
         String username = (String) session.getAttribute("username");
         model.addAttribute("username", username);
 
-        boolean hasBorrowedBooks = false;
+        // Retrieve all categories for the dropdown
+        List<Category> categories = categoryService.getAllCategories();
+        model.addAttribute("categories", categories);
 
-        // Retrieve paginated books based on search criteria
+        // Paginated book results
         Page<Book> booksPage;
-        if (search != null && !search.trim().isEmpty()) {
-            booksPage = bookService.searchBooksByName(search, pageNo, pageSize);
 
-            // Check if any of the searched books are borrowed
-            for (Book book : booksPage) {
-                if (book.isBorrowed()) {
-                    hasBorrowedBooks = true;
-                    break; // No need to continue if we found a borrowed book
-                }
-            }
+        // Search and filter based on category
+        if (search != null && !search.trim().isEmpty()) {
+            booksPage = bookService.searchBooksByNameAndCategory(search, categoryId, pageNo, pageSize);
+        } else if (categoryId != null) {
+            booksPage = bookService.getBooksByCategory(categoryId, pageNo, pageSize);
         } else {
             booksPage = bookService.getPaginatedBooks(pageNo, pageSize);
-
-            // Check if any of the all books are borrowed
-            for (Book book : booksPage) {
-                if (book.isBorrowed()) {
-                    hasBorrowedBooks = true;
-                    break; // No need to continue if we found a borrowed book
-                }
-            }
         }
 
-        // Set attributes for pagination
+        // Set attributes for pagination and filtering
         model.addAttribute("books", booksPage.getContent());
         model.addAttribute("currentPage", pageNo);
         model.addAttribute("totalPages", booksPage.getTotalPages());
         model.addAttribute("pageSize", pageSize);
         model.addAttribute("search", search);
-        model.addAttribute("hasBorrowedBooks", hasBorrowedBooks); // Add this line to pass the variable to JSP
+        model.addAttribute("categoryId", categoryId); // To keep the selected category on the page
 
-        return "index";
+        return "index"; // Return to the index view
     }
+
+
 
 
     @PostMapping("/borrow")
@@ -113,10 +115,10 @@ public class PageController {
     }
 
 
-    @GetMapping("/addbooks")
-    public String addBook() {
-        return "addBook";
-    }
+//    @GetMapping("/addbooks")
+//    public String addBook() {
+//        return "addBook";
+//    }
 
     @GetMapping("/logout")
     public String logout() {

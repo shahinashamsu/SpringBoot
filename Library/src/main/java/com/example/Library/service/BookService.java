@@ -2,12 +2,15 @@ package com.example.Library.service;
 
 import com.example.Library.exception.BookAlreadyExistsException;
 import com.example.Library.model.Book;
+import com.example.Library.model.Category;
 import com.example.Library.repository.BookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.Optional;
 
 @Service
 public class BookService {
@@ -38,14 +41,18 @@ public class BookService {
         return bookRepository.findByBookNameContainingIgnoreCase(name, pageable);
     }
 
-    // Borrow a book
+    // Other methods as defined previously...
+
     public boolean borrowBook(Integer bookId, String borrowerName) {
-        Book book = bookRepository.findById(bookId).orElse(null);
-        if (book != null && !book.isBorrowed()) {
-            book.setBorrowed(true);
-            book.setBorrowedBy(borrowerName);
-            bookRepository.save(book);
-            return true;
+        Optional<Book> optionalBook = bookRepository.findById(bookId);
+        if (optionalBook.isPresent()) {
+            Book book = optionalBook.get();
+            if (!book.isBorrowed()) {
+                book.setBorrowed(true);
+                book.setBorrowedBy(borrowerName);
+                bookRepository.save(book);
+                return true;
+            }
         }
         return false;
     }
@@ -63,5 +70,21 @@ public class BookService {
     // Count total search results
     public long countSearchResults(String name) {
         return bookRepository.countByBookNameContainingIgnoreCase(name);
+    }
+
+    // Search books by name and category with pagination
+    public Page<Book> searchBooksByNameAndCategory(String search, Integer categoryId, int pageNo, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNo, pageSize);
+        if (categoryId != null) {
+            return bookRepository.findByBookNameContainingAndCategoryId(search, categoryId, pageable);
+        } else {
+            return bookRepository.findByBookNameContaining(search, pageable);
+        }
+    }
+
+    // Get books by category with pagination
+    public Page<Book> getBooksByCategory(Integer categoryId, int pageNo, int pageSize) {
+        Pageable pageable = PageRequest.of(pageNo, pageSize);
+        return bookRepository.findByCategoryId(categoryId, pageable);
     }
 }

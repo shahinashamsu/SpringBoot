@@ -1,4 +1,9 @@
-<html>
+<%@ page import="java.util.List" %>
+<%@ page import="com.example.Library.model.Book" %>
+<%@ page import="com.example.Library.model.Category" %>
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<!DOCTYPE html>
+<html lang="en">
 <head>
     <style>
         body {
@@ -38,12 +43,23 @@
             font-weight: bold; /* Bold labels */
         }
 
+        .form-group {
+            display: flex; /* Use flexbox for alignment */
+            align-items: center; /* Center vertically */
+            margin-bottom: 20px; /* Space below the group */
+        }
+
+        .form-group label {
+            margin-right: 10px; /* Space between label and dropdown */
+            flex: 0 0 30%; /* Allow label to take up 30% of the space */
+            text-align: right; /* Right-align label text */
+        }
+
         input[type="text"] {
             width: 100%; /* Full width */
             padding: 10px; /* Inner spacing */
             border: 1px solid #ccc; /* Border */
             border-radius: 5px; /* Rounded corners */
-            margin-bottom: 20px; /* Space below inputs */
             font-size: 16px; /* Font size */
             background-color: #f9f9f9; /* Light input background */
             color: #4a3c36; /* Dark text color */
@@ -66,7 +82,8 @@
         }
 
         .message {
-            color: #4A4A4A; /* Dark message text */
+            color: white; /* Change text color to white */
+            font-weight: bold; /* Make text bold */
             margin-bottom: 20px; /* Space below message */
         }
 
@@ -90,17 +107,51 @@
 <body>
     <h2>Add Book</h2>
 
-    <p class="message">${message}</p>
+    <!-- Display any message, if exists -->
+    <p class="message">
+        <%
+            String message = (String) request.getAttribute("message");
+            if (message != null) {
+                out.print(message);
+            }
+        %>
+    </p>
 
-    <form action="/api/library/books" method="post">
-        <label for="bookName">Book Name:</label>
-        <input type="text" id="bookName" name="bookName" required><br>
+   <form action="/api/library/books" method="post">
+       <div class="form-group">
+           <label for="bookName">Book Name:</label>
+           <input type="text" id="bookName" name="bookName" required>
+       </div>
 
-        <label for="authorName">Author Name:</label>
-        <input type="text" id="authorName" name="authorName" required><br>
+       <div class="form-group">
+           <label for="authorName">Author Name:</label>
+           <input type="text" id="authorName" name="authorName" required>
+       </div>
 
-        <button type="submit">Add Book</button>
-    </form>
+       <div class="form-group">
+           <label for="categoryId">Category:</label>
+
+           <%
+               // Retrieve categories from the request object
+               List<Category> categories = (List<Category>) request.getAttribute("categories");
+           %>
+
+           <select id="categoryId" name="categoryId" required>
+               <option value="" disabled selected>Select a category</option>
+               <%
+                   if (categories != null) {
+                       for (Category category : categories) {
+           %>
+               <option value="<%= category.getId() %>"><%= category.getType() %></option>
+           <%
+                       }
+                   }
+           %>
+           </select>
+       </div>
+
+       <button type="submit">Add Book</button>
+   </form>
 
     <!-- Place the Back to Home button directly under the form -->
     <a href="/index" class="back-home">Back to Home</a>

@@ -1,5 +1,6 @@
 <%@ page import="java.util.List" %>
 <%@ page import="com.example.Library.model.Book" %>
+<%@ page import="com.example.Library.model.Category" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
 <!DOCTYPE html>
 <html lang="en">
@@ -166,10 +167,30 @@
 <body>
     <h2>Welcome, <%= request.getAttribute("username") != null ? request.getAttribute("username") : "" %>!</h2>
 
-    <!-- Display search form -->
+    <!-- Search Form -->
     <form action="/index" method="get" style="margin-bottom: 20px;">
-        <input type="text" name="search" value="${search != null ? search : ''}" placeholder="Search by book name" required>
+        <input type="text" name="search" value="${search != null ? search : ''}" placeholder="Search by book name">
         <button type="submit">Search</button>
+    </form>
+
+    <!-- Category Dropdown for Sorting -->
+    <form action="/index" method="get" style="margin-bottom: 20px;">
+        <label for="categoryId">Category:</label>
+        <select name="categoryId" style="margin-left: 10px;">
+            <option value="">-- Select Category --</option>
+            <%
+                List<Category> categories = (List<Category>) request.getAttribute("categories");
+                Integer selectedCategoryId = (Integer) request.getAttribute("categoryId"); // Get the selected categoryId
+                if (categories != null) {
+                    for (Category category : categories) {
+            %>
+                <option value="<%= category.getId() %>" <%= selectedCategoryId != null && selectedCategoryId.equals(category.getId()) ? "selected" : "" %>><%= category.getType() %></option>
+            <%
+                    }
+                }
+            %>
+        </select>
+        <button type="submit" name="sort" value="true">Sort</button>
     </form>
 
     <!-- Display any success or error message -->
@@ -182,14 +203,20 @@
         }
     %>
 
-    <!-- Add Book Button -->
-    <button class="add-book-button" onclick="location.href='/addbooks'">Add Book</button>
+      <!-- Add Book Button -->
+      <form action="api/library/addbooks" method="get" style="display: inline;">
+          <button class="add-book-button" type="submit">Add Book</button>
+      </form>
+
 
     <!-- Logout button -->
     <form action="/logout" method="post" style="display: inline;">
         <button class="logout-button" type="submit">Logout</button>
     </form>
 
+
+
+    <!-- Book List -->
     <div class="button-container">
         <%
             List<Book> books = (List<Book>) request.getAttribute("books");
@@ -199,6 +226,7 @@
                     <div class="book-box">
                         <strong><%= book.getBookName() %></strong><br>
                         <span>Author: <%= book.getAuthorName() %></span><br>
+                        <span>Category: <%= book.getCategory().getType() %></span><br> <!-- Display category -->
                         <%
                             boolean isBorrowed = book.isBorrowed();
                             if (isBorrowed) {
@@ -229,17 +257,18 @@
         %>
     </div>
 
-    <!-- Conditionally display the Back to Index button after a search -->
-    <%
-        String searchQuery = request.getParameter("search");
-        if (searchQuery != null && !searchQuery.trim().isEmpty()) {
-    %>
-        <div>
-            <a href="/index" class="back-button">Back to Index</a>
-        </div>
-    <%
-        }
-    %>
+      <!-- Display a Back to Index button if sorting by category or searching for books -->
+        <%
+            String searchQuery = request.getParameter("search");
+            Integer categoryId = (Integer) request.getAttribute("categoryId");
+            if (searchQuery != null && !searchQuery.trim().isEmpty() || categoryId != null) {
+        %>
+            <div>
+                <a href="/index" class="back-button">Back to Home</a>
+            </div>
+        <%
+            }
+        %>
 
     <!-- Pagination controls -->
     <div class="pagination">
@@ -263,4 +292,6 @@
         <% } %>
     </div>
 </body>
+
+
 </html>
